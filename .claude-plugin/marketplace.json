@@ -1,0 +1,14 @@
+{
+  "name": "everloop-connector",
+  "description": "EverLoop tools for Edu teams building plug-and-play learning apps.",
+  "owner": {
+    "name": "EverLoop / Agrader"
+  },
+  "plugins": [
+    {
+      "name": "everloop",
+      "source": "./plugins/everloop",
+      "description": "Package a web app for EverLoop: check house rules, wire the connector + events, build the manifest, and pack an upload-ready zip."
+    }
+  ]
+}

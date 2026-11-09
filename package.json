@@ -1,0 +1,17 @@
+{
+  "name": "everloop-connector",
+  "version": "1.0.0",
+  "private": true,
+  "description": "EverLoop Plug-and-Play SDK + Claude Code marketplace: the connector, shared house-rules, and the everloop-package skill.",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild connector/everloop-connector.js --minify --target=es2017 --legal-comments=inline --outfile=connector/everloop-connector.min.js && node scripts/vendor.mjs",
+    "vendor": "node scripts/vendor.mjs",
+    "check": "node plugins/everloop/skills/everloop-package/scripts/check.mjs",
+    "pack": "node plugins/everloop/skills/everloop-package/scripts/pack.mjs",
+    "demo": "node plugins/everloop/skills/everloop-package/scripts/check.mjs sample-app && node plugins/everloop/skills/everloop-package/scripts/pack.mjs sample-app"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}

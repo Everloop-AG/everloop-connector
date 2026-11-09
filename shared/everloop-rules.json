@@ -1,0 +1,88 @@
+{
+  "rulesVersion": "1.0.0",
+  "schemaVersion": 1,
+  "description": "House rules for an EverLoop package. The SAME file is loaded by the Claude skill's `check` step and by the server's upload checker, so a package that passes locally passes on upload. Add rules only; never rename or remove an id. The server rejects any manifest whose rulesHash does not match the server's copy of this file.",
+  "note": "Patterns are intentionally broad (they flag for human/author review). A finding is a reason to look, not always a hard block — but a package must have ZERO unresolved `error` findings to pass upload. Never weaken a rule to make a check pass.",
+  "rules": [
+    {
+      "id": "no-external-url",
+      "severity": "error",
+      "applies": ["html", "css", "js"],
+      "pattern": "(?:src|href)\\s*=\\s*[\"']?(?:https?:)?//|url\\(\\s*[\"']?(?:https?:)?//|@import\\s+[\"'](?:https?:)?//",
+      "message": "External resource reference found. An EverLoop package must be fully self-contained — bundle all scripts, styles, fonts and images into the package instead of linking to a CDN or external site.",
+      "fix": "Download the resource into the package (e.g. /assets) and reference it with a relative path like ./assets/name.ext."
+    },
+    {
+      "id": "no-network-apis",
+      "severity": "error",
+      "applies": ["js", "html"],
+      "pattern": "\\b(?:fetch\\s*\\(|XMLHttpRequest|WebSocket|EventSource|navigator\\.sendBeacon|new\\s+Image\\s*\\(\\s*\\)\\s*\\.src\\s*=|import\\s*\\(\\s*[\"']https?:)",
+      "message": "Network call detected. Packages have no network access (the player blocks it). All data flows through EverLoop events, not HTTP.",
+      "fix": "Remove the network call. To record progress/scores/rewards, use the EverLoop.* event API. To read state, use EverLoop.progress.get/all, EverLoop.achievements.list and EverLoop.onUpdate."
+    },
+    {
+      "id": "no-browser-storage",
+      "severity": "error",
+      "applies": ["js", "html"],
+      "pattern": "\\b(?:localStorage|sessionStorage|indexedDB|window\\.caches|document\\.cookie)\\b",
+      "message": "Browser storage used. Packages must not store student data or progress locally — EverLoop is the single source of truth.",
+      "fix": "Replace progress saves with EverLoop.progress(activityId, {saveSlot}) (opaque resume blob) and read restored state with EverLoop.progress.get/all on resume."
+    },
+    {
+      "id": "no-window-open",
+      "severity": "error",
+      "applies": ["js", "html"],
+      "pattern": "window\\.open\\s*\\(|target\\s*=\\s*[\"']_blank[\"']|window\\.top\\b|window\\.parent\\b|top\\.location|parent\\.location",
+      "message": "Attempt to open a window or reach the parent/top frame. The player blocks popups and navigation; reaching the parent frame is not allowed.",
+      "fix": "Remove the popup/navigation. Keep all UI inside the app. Communicate with EverLoop only through the EverLoop.* API."
+    },
+    {
+      "id": "no-credentials-input",
+      "severity": "error",
+      "applies": ["html"],
+      "pattern": "<input[^>]*type\\s*=\\s*[\"']password[\"']|autocomplete\\s*=\\s*[\"'](?:username|current-password|new-password)[\"']|name\\s*=\\s*[\"'](?:password|passwd|login|email)[\"']",
+      "message": "Login or password input found. Packages must never collect credentials or personal data; the student is already authenticated by EverLoop.",
+      "fix": "Remove the login/password fields. Use EverLoop.student.displayName if you need to greet the student."
+    },
+    {
+      "id": "no-analytics",
+      "severity": "error",
+      "applies": ["html", "js"],
+      "pattern": "googletagmanager|google-analytics|gtag\\s*\\(|\\bga\\s*\\(\\s*[\"']|mixpanel|segment\\.(?:io|com)|cdn\\.segment|fbq\\s*\\(|hotjar|amplitude",
+      "message": "Third-party analytics/tracking snippet found. Packages must not phone home or track students.",
+      "fix": "Remove the analytics snippet entirely."
+    },
+    {
+      "id": "entry-must-exist",
+      "severity": "error",
+      "applies": ["manifest"],
+      "pattern": null,
+      "message": "The package must contain index.html at its root (the fixed entry point).",
+      "fix": "Run the `pack` step, which places index.html at the root of the zip."
+    },
+    {
+      "id": "connector-required",
+      "severity": "error",
+      "applies": ["manifest"],
+      "pattern": null,
+      "message": "The package must include the EverLoop connector at a supported version and load it from index.html.",
+      "fix": "Run the `connect` step to add everloop-connector.js and reference it from index.html before your app scripts."
+    },
+    {
+      "id": "no-eval",
+      "severity": "warn",
+      "applies": ["js", "html"],
+      "pattern": "\\beval\\s*\\(|new\\s+Function\\s*\\(|setTimeout\\s*\\(\\s*[\"']|setInterval\\s*\\(\\s*[\"']",
+      "message": "Dynamic code execution (eval / Function / string timers). The player's CSP blocks most of this; it will likely break at runtime.",
+      "fix": "Replace eval/Function and string-based timers with direct function references."
+    },
+    {
+      "id": "no-inline-remote-font",
+      "severity": "warn",
+      "applies": ["css"],
+      "pattern": "@font-face[^}]*url\\(\\s*[\"']?(?:https?:)?//",
+      "message": "Remote web font. Fonts must be bundled; remote fonts are blocked by the player.",
+      "fix": "Download the font files into the package and reference them with a relative url(./assets/font.woff2)."
+    }
+  ]
+}

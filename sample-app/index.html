@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sample Quiz</title>
+    <!-- The connector must load BEFORE the app's own scripts. -->
+    <script src="./everloop-connector.js"></script>
+    <style>
+      body { font-family: system-ui, sans-serif; max-width: 480px; margin: 2rem auto; padding: 0 1rem; color: #222; }
+      h1 { font-size: 1.3rem; }
+      .q { margin: 1rem 0; }
+      button { font: inherit; padding: .5rem .9rem; margin: .2rem .3rem .2rem 0; cursor: pointer; border: 1px solid #ccc; border-radius: 8px; background: #fff; }
+      button:hover { border-color: #888; }
+      #status { margin-top: 1rem; padding: .75rem; background: #f3f6ff; border-radius: 8px; }
+      .badge { display: inline-block; margin-right: .4rem; }
+      .hi { color: #b36b00; }
+    </style>
+  </head>
+  <body>
+    <h1>Sample Quiz <span id="hello" class="hi"></span></h1>
+    <div id="quiz"></div>
+    <div id="status">Loading…</div>
+
+    <script>
+      // ------- the quiz (ordinary app logic; no storage, no network) -------
+      var ACTIVITY = "sample-quiz";
+      var QUESTIONS = [
+        { q: "2 + 2 = ?", options: [3, 4, 5], answer: 4 },
+        { q: "5 − 1 = ?", options: [3, 4, 6], answer: 4 },
+      ];
+      var score = 0, idx = 0, started = false;
+
+      function render() {
+        var quiz = document.getElementById("quiz");
+        if (idx >= QUESTIONS.length) { finish(); return; }
+        var item = QUESTIONS[idx];
+        quiz.innerHTML = "<div class='q'><strong>Q" + (idx + 1) + ".</strong> " + item.q + "</div>";
+        item.options.forEach(function (opt) {
+          var b = document.createElement("button");
+          b.textContent = opt;
+          b.onclick = function () { answer(opt); };
+          quiz.appendChild(b);
+        });
+      }
+
+      async function answer(choice) {
+        if (!started) { started = true; await EverLoop.started(ACTIVITY); }
+        if (choice === QUESTIONS[idx].answer) score++;
+        idx++;
+        render();
+      }
+
+      async function finish() {
+        document.getElementById("quiz").innerHTML = "<em>Done!</em>";
+        // Report the result — then draw ONLY from EverLoop's confirmation.
+        await EverLoop.scored(ACTIVITY, score, QUESTIONS.length);
+        var res = await EverLoop.completed(ACTIVITY, { score: score, maxScore: QUESTIONS.length });
+        if (score === QUESTIONS.length) EverLoop.achievement("sample-star");
+        var reward = await EverLoop.reward(ACTIVITY);
+        showStatus(res, reward);
+      }
+
+      function showStatus(res, reward) {
+        var paid = (reward && reward.bucks_paid) || 0;
+        document.getElementById("status").innerHTML =
+          "Score: <strong>" + (res.record.score != null ? res.record.score : score) + " / " + QUESTIONS.length + "</strong>" +
+          (paid > 0 ? " · earned <strong>" + paid + "</strong> bucks here" : "");
+      }
+
+      // ------- render from EverLoop, never from local guesses -------
+      EverLoop.onUpdate(function (state) {
+        document.getElementById("hello").textContent = state.student.displayName ? "· " + state.student.displayName : "";
+        var badges = Object.keys(state.achievements || {});
+        if (badges.length) {
+          var el = document.getElementById("status");
+          if (el && el.textContent.indexOf("★") === -1) el.innerHTML += " <span class='badge'>★ " + badges.join(", ") + "</span>";
+        }
+      });
+
+      EverLoop.onReady(function () {
+        document.getElementById("status").textContent = EverLoop.isPreview()
+          ? "Preview mode — play through; events are logged to the console."
+          : "Ready.";
+        // restore prior progress if the student returns mid-way
+        var prior = EverLoop.progress.get(ACTIVITY);
+        if (prior && prior.status === "completed") {
+          document.getElementById("quiz").innerHTML = "<em>Already completed — replay?</em>";
+        }
+        render();
+      });
+    </script>
+  </body>
+</html>

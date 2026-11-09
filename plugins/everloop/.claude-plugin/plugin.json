@@ -1,0 +1,8 @@
+{
+  "name": "everloop",
+  "description": "Make a web app EverLoop-ready: check house rules, inject the connector, wire the event API (started/scored/completed/achievement/reward), build manifest.json with stable IDs, and pack an upload-ready zip.",
+  "version": "1.0.0",
+  "author": {
+    "name": "EverLoop / Agrader"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "packageId": "sample-quiz",
+  "version": "1.0.2",
+  "title": "Sample Quiz",
+  "level": "demo",
+  "entry": "index.html",
+  "activities": [
+    {
+      "id": "sample-quiz",
+      "title": "Sample Quiz",
+      "topic": "Arithmetic",
+      "type": "quiz",
+      "maxScore": 2
+    }
+  ],
+  "achievements": [
+    {
+      "id": "sample-star",
+      "kind": "badge",
+      "title": "Perfect Score",
+      "icon": "assets/badge.svg",
+      "description": "Answer every question correctly",
+      "checkedBy": "everloop"
+    }
+  ],
+  "rulesHash": "f493d5ec9e89aa2a96e58552a59ea34d9cf057f1e51ad40a4976d33379f3c4e9",
+  "connector": {
+    "version": "1.0.0"
+  },
+  "schemaVersion": 1
+}
