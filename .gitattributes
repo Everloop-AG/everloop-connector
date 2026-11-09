@@ -1,0 +1,15 @@
+# Force LF on all text files, on every platform.
+# This is load-bearing: manifest.rulesHash = sha256(everloop-rules.json) is compared
+# byte-for-byte between the skill (often Windows) and the EverLoop server (Linux). If
+# line endings differ, identical rules hash differently and uploads are wrongly rejected.
+* text=auto eol=lf
+
+# Binary assets — never touch.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.woff  binary
+*.woff2 binary
+*.zip  binary
